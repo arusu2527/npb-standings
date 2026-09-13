@@ -1,0 +1,1856 @@
+/* ==========================================================================
+   NPB スタイル 順位表・対戦表システム スタイルシート (style.css)
+   ========================================================================== */
+
+/* 変数定義 (CSS Variables) */
+:root {
+  /* テーマカラー (ダークモード基準) */
+  --bg-primary: #0b0f19;
+  --bg-secondary: #131a29;
+  --bg-card: rgba(23, 32, 51, 0.85);
+  --bg-card-hover: rgba(30, 42, 66, 0.95);
+  --bg-glass: rgba(19, 26, 41, 0.7);
+  --bg-input: #1a233a;
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-color-strong: rgba(255, 255, 255, 0.15);
+  
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  /* アクセントカラー */
+  --accent-primary: #3b82f6;
+  --accent-primary-hover: #2563eb;
+  --accent-gold: #f59e0b;
+  --accent-silver: #94a3b8;
+  --accent-bronze: #d97706;
+  
+  /* 勝敗ステータス */
+  --color-win: #10b981;
+  --color-win-bg: rgba(16, 185, 129, 0.15);
+  --color-lose: #ef4444;
+  --color-lose-bg: rgba(239, 68, 68, 0.15);
+  --color-draw: #64748b;
+  --color-draw-bg: rgba(100, 116, 139, 0.15);
+  --color-save: #8b5cf6;
+  --color-save-bg: rgba(139, 92, 246, 0.15);
+  
+  /* クラス区分 */
+  --a-class-border: #3b82f6;
+  --a-class-bg: rgba(59, 130, 246, 0.05);
+  --b-class-border: #475569;
+  --b-class-bg: transparent;
+
+  /* フォント */
+  --font-main: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Outfit', 'Noto Sans JP', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+
+  /* シャドウ・エフェクト */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.25);
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ライトテーマ用変数オーバーライド */
+body.light-theme {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #edf2f7;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-hover: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --bg-input: #f1f5f9;
+  
+  --border-color: rgba(0, 0, 0, 0.08);
+  --border-color-strong: rgba(0, 0, 0, 0.15);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  --color-win-bg: rgba(16, 185, 129, 0.1);
+  --color-lose-bg: rgba(239, 68, 68, 0.1);
+  --color-draw-bg: rgba(100, 116, 139, 0.1);
+  --color-save-bg: rgba(139, 92, 246, 0.1);
+  
+  --a-class-border: #2563eb;
+  --a-class-bg: rgba(37, 99, 235, 0.04);
+  --b-class-border: #cbd5e1;
+  --b-class-bg: transparent;
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* リセット & 基本設定 */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.04) 0%, transparent 40%);
+  background-attachment: fixed;
+}
+
+.app-container {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* カード基底スタイル */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+
+/* ヘッダー */
+.app-header {
+  position: relative;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35);
+}
+
+.header-titles h1 {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(to right, var(--text-primary), var(--text-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.badge-subtitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+/* メインナビゲーションタブ */
+.main-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tab-btn i {
+  font-size: 1.25rem;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-card);
+}
+
+.tab-btn.active {
+  background: var(--accent-primary);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+
+.tab-badge {
+  padding: 0.15rem 0.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* タブペイン表示切替 */
+.tab-pane {
+  display: none;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.tab-pane.active {
+  display: flex;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* ボタン共通 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  font-family: var(--font-main);
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn i {
+  font-size: 1.15em;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.btn-accent:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-input);
+  border-color: var(--border-color-strong);
+  color: #fff;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.btn-outline:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-icon {
+  padding: 0.55rem;
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-icon:hover {
+  background: var(--bg-input);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+/* プリセットドロップダウン */
+.preset-dropdown {
+  position: relative;
+  z-index: 200;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 250px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  padding: 0.6rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.35rem;
+  z-index: 500;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dropdown-menu.show {
+  display: flex;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.dropdown-header {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0.4rem 0.6rem;
+  letter-spacing: 0.05em;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.84rem;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: var(--transition);
+}
+
+.dropdown-item:hover {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--accent-primary);
+}
+
+.league-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.league-dot.central { background: #3b82f6; }
+.league-dot.pacific { background: #10b981; }
+.league-dot.all12 { background: #f59e0b; }
+.league-dot.custom { background: #a855f7; }
+.league-dot.empty { background: #64748b; }
+
+/* コントロール・リーグ情報バー */
+.control-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+}
+
+.league-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.league-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-full);
+  color: var(--accent-gold);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.league-meta {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.meta-item strong {
+  color: var(--text-primary);
+}
+
+.view-toggles {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* トグルスイッチ */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.slider {
+  position: relative;
+  width: 38px;
+  height: 20px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  transition: var(--transition);
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.toggle-switch input:checked + .slider {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(18px);
+}
+
+/* セクション構造 */
+.section-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.section-title i {
+  font-size: 1.3rem;
+  color: var(--accent-primary);
+  align-self: center;
+}
+
+.section-title h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.help-text {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.legend-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.legend-tag .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-tag.a-class {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.legend-tag.a-class .dot { background: #3b82f6; }
+
+.legend-tag.b-class {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+.legend-tag.b-class .dot { background: #64748b; }
+
+/* テーブル共通 */
+.table-responsive {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+}
+
+.standings-table, .matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.standings-table th, .matrix-table th {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.85rem 0.6rem;
+  border-bottom: 1px solid var(--border-color-strong);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.standings-table td, .matrix-table td {
+  padding: 0.85rem 0.6rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.standings-table tbody tr:hover {
+  background: var(--bg-card-hover);
+}
+
+/* 順位テーブルの行スタイル */
+.rank-row.a-class-row {
+  border-left: 4px solid var(--a-class-border);
+}
+
+.rank-row.b-class-row {
+  border-left: 4px solid var(--b-class-border);
+}
+
+.col-rank { width: 60px; }
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.rank-1 {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+.rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
+.rank-3 { background: linear-gradient(135deg, #d97706, #92400e); color: #fff; }
+.rank-other { background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border-color); }
+
+.col-team { text-align: left !important; min-width: 180px; }
+
+.team-cell-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.team-badge-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #fff;
+  flex-shrink: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.team-name-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.team-name-main { font-weight: 700; font-size: 0.95rem; color: var(--text-primary); }
+.team-name-short { font-size: 0.72rem; color: var(--text-muted); }
+
+.stat-num { font-family: var(--font-mono); font-weight: 600; }
+.col-pct .stat-num { font-weight: 700; color: var(--accent-gold); }
+.col-gb .stat-num { color: var(--text-secondary); }
+
+.diff-positive { color: var(--color-win); font-weight: 700; }
+.diff-negative { color: var(--color-lose); font-weight: 700; }
+.diff-zero { color: var(--text-muted); }
+
+.margin-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.margin-badge.positive { background: var(--color-win-bg); color: var(--color-win); }
+.margin-badge.negative { background: var(--color-lose-bg); color: var(--color-lose); }
+.margin-badge.even { background: var(--color-draw-bg); color: var(--text-muted); }
+
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.streak-badge.streak-win { background: var(--color-win-bg); color: var(--color-win); }
+.streak-badge.streak-lose { background: var(--color-lose-bg); color: var(--color-lose); }
+
+.col-actions { width: 90px; }
+.action-btn-group { display: flex; align-items: center; justify-content: center; gap: 0.35rem; }
+
+.action-icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.action-icon-btn:hover { background: var(--bg-input); color: var(--accent-primary); border-color: var(--accent-primary); }
+.action-icon-btn.delete-btn:hover { background: var(--color-lose-bg); color: var(--color-lose); border-color: var(--color-lose); }
+
+/* 対戦成績マトリクス (Head to Head) */
+.matrix-legend { display: flex; align-items: center; gap: 1rem; font-size: 0.78rem; color: var(--text-secondary); }
+.win-box, .lose-box, .draw-box, .rem-box { display: inline-block; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.72rem; font-weight: 700; }
+.win-box { background: var(--color-win-bg); color: var(--color-win); }
+.lose-box { background: var(--color-lose-bg); color: var(--color-lose); }
+.draw-box { background: var(--color-draw-bg); color: var(--color-draw); }
+.rem-box { background: var(--border-color); color: var(--text-muted); }
+
+.matrix-table th.matrix-team-th { min-width: 110px; }
+.matrix-header-cell { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.matrix-cell-diagonal { background: rgba(0, 0, 0, 0.2); color: var(--text-muted); font-size: 1.2rem; }
+
+.matrix-match-cell {
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+  padding: 0.6rem 0.4rem;
+  min-width: 110px;
+}
+.matrix-match-cell:hover {
+  background: rgba(59, 130, 246, 0.15);
+  box-shadow: inset 0 0 0 1px var(--accent-primary);
+}
+
+.matrix-record-box { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.matrix-record-score { font-family: var(--font-mono); font-weight: 700; font-size: 0.88rem; display: flex; align-items: center; gap: 0.25rem; }
+.rec-w { color: var(--color-win); }
+.rec-l { color: var(--color-lose); }
+.rec-d { color: var(--text-muted); }
+.matrix-record-sub { display: flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; color: var(--text-muted); }
+
+.match-advantage { font-weight: 700; padding: 0.05rem 0.3rem; border-radius: 2px; }
+.adv-win { background: var(--color-win-bg); color: var(--color-win); }
+.adv-lose { background: var(--color-lose-bg); color: var(--color-lose); }
+.adv-even { color: var(--text-muted); }
+
+/* ==========================================================================
+   1試合ごとの試合結果・スコアブック スタイル
+   ========================================================================== */
+.filter-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.filter-group label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.filter-group select {
+  min-width: 160px;
+}
+
+/* 試合結果カード一覧 (Games Grid) */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+.game-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.game-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-color-strong);
+  box-shadow: var(--shadow-lg);
+}
+
+.game-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.82rem;
+}
+
+.game-round-tag {
+  font-weight: 700;
+  color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.game-meta-tag {
+  color: var(--text-muted);
+}
+
+.game-card-body {
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* スコア表示行 */
+.game-scoreboard {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.game-team-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.game-team-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.game-team-role {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.game-score-display {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.5rem;
+}
+
+.score-digit {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 800;
+  min-width: 38px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.score-digit.winner {
+  color: var(--accent-gold);
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.score-vs-hyphen {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* 投手・ホームラン情報ボックス */
+.game-details-box {
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border-color);
+}
+
+.detail-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.detail-label {
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.detail-content {
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.badge-p {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #fff;
+  margin-right: 0.2rem;
+}
+.badge-win { background: var(--color-win); }
+.badge-lose { background: var(--color-lose); }
+.badge-save { background: var(--color-save); }
+.badge-starter { background: #3b82f6; }
+.badge-hr { background: #f97316; }
+
+.game-notes {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.game-card-footer {
+  padding: 0.6rem 1rem;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* ==========================================================================
+   対戦カード 27回戦一覧 モーダル用スタイル
+   ========================================================================== */
+.card-modal-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.rounds-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rounds-list-header {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.rounds-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0.25rem;
+}
+
+.round-item-card {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.round-item-card:hover {
+  border-color: var(--accent-primary);
+  background: var(--bg-card-hover);
+}
+
+.round-item-card.unplayed {
+  border-style: dashed;
+  opacity: 0.65;
+}
+.round-item-card.unplayed:hover {
+  opacity: 1;
+}
+
+.round-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.round-item-score {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.round-item-pitchers {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* 統計・リーダーカード */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.stat-card {
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.run-icon { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+.defense-icon { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.diff-icon { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.progress-icon { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+
+.stat-info { display: flex; flex-direction: column; }
+.stat-label { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); }
+.stat-value { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: var(--text-primary); margin: 0.1rem 0; }
+.stat-sub { font-size: 0.76rem; color: var(--text-muted); }
+
+/* フッター & アクセスカウンター */
+.app-footer {
+  padding: 1.5rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  margin-top: 2rem;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.footer-stats-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 0.35rem 1rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.footer-stats-badge strong {
+  color: var(--accent-gold);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+
+.stats-divider {
+  color: var(--border-color);
+}
+
+/* ヘッダー用 アクセスカウンターバッジ */
+.visitor-counter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.visitor-counter-badge:hover {
+  border-color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+.counter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.counter-pulse {
+  width: 7px;
+  height: 7px;
+  background: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: counterPulse 2s infinite;
+}
+
+@keyframes counterPulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.counter-lbl {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.counter-num {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--accent-gold);
+}
+
+.counter-item.today .counter-num {
+  color: #10b981;
+}
+
+.counter-sep {
+  color: var(--text-muted);
+  opacity: 0.5;
+  font-size: 0.75rem;
+}
+
+.counter-icon {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* モーダル */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.modal-backdrop.show {
+  display: flex;
+  opacity: 1;
+}
+
+.modal-dialog {
+  width: 100%;
+  max-width: 540px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: scaleUp 0.2s ease-out;
+}
+
+.modal-dialog.modal-match { max-width: 620px; }
+.modal-dialog.modal-game-detail { max-width: 840px; width: 95%; }
+.modal-dialog.modal-lg { max-width: 840px; width: 95%; }
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem;
+}
+.btn-close:hover { color: var(--text-primary); }
+
+.modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-height: 78vh;
+  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+
+/* フォーム共通 */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+.form-group label { font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem; }
+.required { color: var(--color-lose); }
+
+.form-control {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0.9rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+.form-control:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+.form-row.three-cols .form-group { flex: 1; min-width: 0; }
+.col-half { flex: 1; min-width: 0; }
+.score-number { font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; text-align: center; }
+
+.input-with-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input-with-unit input { padding-right: 2.5rem; width: 100%; box-sizing: border-box; }
+.input-with-unit .unit {
+  position: absolute;
+  right: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* 試合入力フォーム (Matchup Box) */
+.game-matchup-box {
+  display: flex;
+  align-items: stretch;
+  gap: 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.matchup-team-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.matchup-team-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.matchup-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+.vs-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 0.9rem;
+  color: var(--accent-gold);
+}
+
+.score-huge {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 900;
+  text-align: center;
+  padding: 0.4rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pitcher-records-section, .homerun-records-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.color-picker-wrapper { display: flex; align-items: center; gap: 0.5rem; }
+.color-input { width: 42px; height: 42px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); cursor: pointer; background: transparent; padding: 0; }
+
+.match-header-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 1rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.match-team-card { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.match-team-name { font-weight: 700; font-size: 1rem; }
+.match-vs-badge { font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; color: var(--accent-gold); }
+.match-card-limit-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--text-secondary); }
+.current-total-badge { padding: 0.2rem 0.6rem; background: var(--bg-input); border-radius: var(--radius-sm); font-weight: 600; }
+
+.score-input-section { display: flex; flex-direction: column; gap: 0.75rem; background: var(--bg-card); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); }
+.score-inputs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+.score-runs-grid { grid-template-columns: repeat(2, 1fr); }
+
+.quick-action-bar { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding: 0.75rem; background: var(--bg-card); border-radius: var(--radius-md); }
+.quick-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+
+.btn-win { background: var(--color-win-bg); color: var(--color-win); border: 1px solid rgba(16, 185, 129, 0.3); }
+.btn-win:hover { background: var(--color-win); color: #fff; }
+.btn-lose { background: var(--color-lose-bg); color: var(--color-lose); border: 1px solid rgba(239, 68, 68, 0.3); }
+.btn-lose:hover { background: var(--color-lose); color: #fff; }
+.btn-draw { background: var(--color-draw-bg); color: var(--text-secondary); border: 1px solid var(--border-color); }
+.btn-draw:hover { background: var(--text-muted); color: #fff; }
+
+/* ==========================================================================
+   選手名鑑 & 個人成績 (Players & Stats) スタイル
+   ========================================================================== */
+.player-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+}
+
+.player-team-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.player-team-filter label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.player-subnav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.subtab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.subtab-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--border-color-strong);
+}
+
+.subtab-btn.active {
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: var(--accent-primary);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.player-subpane {
+  display: none;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.player-subpane.active {
+  display: flex;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* 選手成績テーブル */
+.player-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 0.88rem;
+}
+
+.player-stats-table th {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--border-color-strong);
+  white-space: nowrap;
+}
+
+.player-stats-table td {
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.player-stats-table tbody tr:hover {
+  background: var(--bg-card-hover);
+}
+
+.player-stats-table tbody tr.player-row-selected {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.col-p-chk {
+  width: 40px;
+  text-align: center;
+}
+
+.col-p-chk input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent-primary);
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border: 1px solid #b91c1c;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+}
+
+.dropdown-item.text-danger {
+  color: #ef4444;
+}
+
+.dropdown-item.text-danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.col-p-num { width: 50px; font-weight: 700; color: var(--text-muted); }
+.col-p-team { width: 90px; text-align: left; }
+.col-p-name { text-align: left !important; min-width: 130px; font-family: var(--font-main) !important; font-weight: 700; color: var(--text-primary); }
+.col-p-pos { width: 70px; }
+.col-p-bat { width: 80px; font-size: 0.75rem; color: var(--text-muted); }
+
+.col-p-highlight {
+  color: var(--accent-gold) !important;
+  font-weight: 800 !important;
+}
+
+.pos-badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+}
+.pos-p { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.pos-c { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.pos-if { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.pos-of { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+.pos-dh { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+/* リーダーボード */
+.leaders-section-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.leaders-category-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.leader-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.leader-card-header {
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.leader-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.leader-unit {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.leader-card-body {
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.leader-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed var(--border-color);
+  font-size: 0.85rem;
+}
+
+.leader-row:last-child {
+  border-bottom: none;
+}
+
+.leader-rank-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.75rem;
+}
+.rank-1-mini { background: #f59e0b; color: #fff; }
+.rank-2-mini { background: #94a3b8; color: #fff; }
+.rank-3-mini { background: #d97706; color: #fff; }
+.rank-other-mini { background: var(--bg-input); color: var(--text-muted); }
+
+.leader-player-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  margin-left: 0.5rem;
+}
+
+.leader-player-name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.leader-player-team {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.leader-val {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+}
+
+/* 選手登録フォーム */
+.player-form-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-type-selector {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding: 0.5rem;
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+}
+
+.radio-pill {
+  position: relative;
+  cursor: pointer;
+}
+
+.radio-pill input {
+  position: absolute;
+  opacity: 0;
+}
+
+.radio-pill span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.radio-pill input:checked + span {
+  background: var(--accent-primary);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.player-stat-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row.four-cols {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.highlight-label {
+  color: var(--accent-gold);
+}
+
+.calc-preview-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  background: var(--bg-input);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.calc-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.calc-item.highlight .calc-val {
+  color: var(--accent-gold);
+}
+
+.calc-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.calc-val {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleUp { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+/* レスポンシブ対応 */
+@media (max-width: 900px) {
+  .app-container { padding: 1rem; gap: 1.25rem; }
+  .app-header { flex-direction: column; align-items: flex-start; }
+  .header-actions { width: 100%; justify-content: flex-start; }
+  .control-panel { flex-direction: column; align-items: flex-start; }
+  .view-toggles { width: 100%; justify-content: space-between; }
+  .game-matchup-box { flex-direction: column; }
+  .form-row { flex-direction: column; gap: 0.75rem; }
+  .form-row.four-cols { grid-template-columns: repeat(2, 1fr); }
+  .calc-preview-bar { grid-template-columns: repeat(2, 1fr); }
+  .player-controls { flex-direction: column; align-items: flex-start; }
+}
+

@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NPB スタイル 順位表・対戦表 & 個人成績システム</title>
+  <meta name="description" content="日本のプロ野球（NPB）公式ルールに準拠した順位表・対戦成績マトリクス・1試合ごとの試合結果・選手名鑑・打者投手個人成績（打率・防御率・OPS等自動計算）管理システム。">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@500;600;700;800&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <div class="app-container">
+    <!-- ヘッダー -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="logo-icon">
+          <i class="ph-bold ph-baseball"></i>
+        </div>
+        <div class="header-titles">
+          <h1>プロ野球 順位表・対戦表 & 選手名鑑システム</h1>
+          <span class="badge-subtitle">NPB STANDINGS, MATRIX, GAME LOGS & PLAYER STATS</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- アクセスカウンターバッジ -->
+        <div class="visitor-counter-badge" id="headerVisitorCounter" title="本日のアクセス数 / 累計アクセス数">
+          <div class="counter-item today">
+            <span class="counter-pulse"></span>
+            <span class="counter-lbl">本日</span>
+            <span class="counter-num" id="todayVisitsHeader">--</span>
+          </div>
+          <span class="counter-sep">/</span>
+          <div class="counter-item total">
+            <i class="ph ph-eye counter-icon"></i>
+            <span class="counter-lbl">累計</span>
+            <span class="counter-num" id="totalVisitsHeader">--</span>
+          </div>
+        </div>
+
+        <!-- プリセット選択 -->
+        <div class="preset-dropdown">
+          <button class="btn btn-secondary dropdown-toggle" id="presetDropdownBtn" title="プリセット読込">
+            <i class="ph ph-folder-open"></i>
+            <span>プリセット</span>
+            <i class="ph ph-caret-down"></i>
+          </button>
+          <div class="dropdown-menu" id="presetMenu">
+            <div class="dropdown-header">プリセットを選択</div>
+            <button class="dropdown-item" onclick="app.loadPreset('central')">
+              <span class="league-dot central"></span> セントラル・リーグ (6球団・選手付き)
+            </button>
+            <button class="dropdown-item" onclick="app.loadPreset('pacific')">
+              <span class="league-dot pacific"></span> パシフィック・リーグ (6球団・選手付き)
+            </button>
+            <button class="dropdown-item" onclick="app.loadPreset('twelve')">
+              <span class="league-dot all12"></span> 12球団 全体リーグ
+            </button>
+            <button class="dropdown-item" onclick="app.loadPreset('four')">
+              <span class="league-dot custom"></span> 4チーム ミニリーグ
+            </button>
+            <button class="dropdown-item" onclick="app.loadPreset('empty')">
+              <span class="league-dot empty"></span> 新規リーグ（空の状態）
+            </button>
+          </div>
+        </div>
+
+        <!-- チーム追加ボタン -->
+        <button class="btn btn-primary" id="addTeamBtn" onclick="app.openTeamModal()">
+          <i class="ph ph-plus-circle"></i>
+          <span>チーム追加</span>
+        </button>
+
+        <!-- 選手追加ボタン -->
+        <button class="btn btn-secondary" onclick="app.openPlayerModal()">
+          <i class="ph-bold ph-user-plus"></i>
+          <span>選手登録</span>
+        </button>
+
+        <!-- 試合登録ボタン -->
+        <button class="btn btn-accent" onclick="app.openSingleGameModal()">
+          <i class="ph-bold ph-pencil-line"></i>
+          <span>試合結果を入力</span>
+        </button>
+
+        <!-- 設定 -->
+        <button class="btn btn-secondary" id="settingsBtn" onclick="app.openSettingsModal()" title="設定">
+          <i class="ph ph-gear"></i>
+          <span>設定</span>
+        </button>
+
+        <!-- データ管理 -->
+        <button class="btn btn-secondary" id="dataMenuBtn" onclick="app.openDataModal()" title="データ保存・復元">
+          <i class="ph ph-floppy-disk"></i>
+          <span>データ管理</span>
+        </button>
+
+        <!-- テーマ切り替え -->
+        <button class="btn btn-icon" id="themeToggleBtn" onclick="app.toggleTheme()" title="テーマ切替">
+          <i class="ph ph-sun" id="themeIcon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- メインナビゲーションタブ -->
+    <nav class="main-tabs card">
+      <button class="tab-btn active" id="tabStandingsBtn" onclick="app.switchTab('standings')">
+        <i class="ph-bold ph-trophy"></i>
+        <span>順位表 & 対戦マトリクス</span>
+      </button>
+      <button class="tab-btn" id="tabGamesBtn" onclick="app.switchTab('games')">
+        <i class="ph-bold ph-calendar-check"></i>
+        <span>1試合ごとの対戦結果・スコアブック</span>
+        <span class="tab-badge" id="totalGamesBadge">0 試合</span>
+      </button>
+      <button class="tab-btn" id="tabPlayersBtn" onclick="app.switchTab('players')">
+        <i class="ph-bold ph-users-three"></i>
+        <span>選手名鑑 & 個人成績 (打者・投手)</span>
+        <span class="tab-badge" id="totalPlayersBadge">0 名</span>
+      </button>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <main class="main-content">
+      <!-- リーグ概要バー -->
+      <div class="control-panel card">
+        <div class="league-info">
+          <div class="league-badge" id="leagueTitleBadge">
+            <i class="ph-fill ph-trophy"></i>
+            <span id="leagueNameDisplay">ペナントレース 順位表</span>
+          </div>
+          <div class="league-meta">
+            <span class="meta-item"><i class="ph ph-users-three"></i> <strong id="teamCountDisplay">6</strong> チーム</span>
+            <span class="meta-item"><i class="ph ph-arrows-clockwise"></i> カードあたり <strong id="gamesPerMatchDisplay">27</strong> 回戦</span>
+            <span class="meta-item"><i class="ph ph-flag"></i> 1チーム最大 <strong id="maxGamesDisplay">135</strong> 試合</span>
+            <span class="meta-item"><i class="ph ph-scales"></i> 順位決定: <strong id="tiebreakerRuleDisplay">セ・リーグ方式</strong></span>
+          </div>
+        </div>
+
+        <div class="view-toggles">
+          <div class="sync-mode-selector">
+            <label class="toggle-switch" title="1試合ごとの結果と順位表を自動で完全集計・連動します">
+              <input type="checkbox" id="syncModeToggle" checked onchange="app.toggleSyncMode(this.checked)">
+              <span class="slider"></span>
+              <span class="toggle-label"><i class="ph ph-arrows-left-right"></i> 成績自動集計連動</span>
+            </label>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="app.resetAllScores()" title="全成績・試合記録をリセット">
+            <i class="ph ph-arrow-counter-clockwise"></i>
+            <span>成績リセット</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- タブ 1: 順位表 & 対戦マトリクスビュー                                     -->
+      <!-- ========================================================================= -->
+      <div class="tab-pane active" id="paneStandings">
+        <!-- セクション 1: 順位表 -->
+        <section class="section-container" id="standingsSection">
+          <div class="section-header">
+            <div class="section-title">
+              <i class="ph-bold ph-list-numbers"></i>
+              <h2>順位表 (Standings)</h2>
+              <span class="help-text">※NPB公式順位決定ルールに基づきリアルタイムで自動ソートされます</span>
+            </div>
+            <div class="section-actions">
+              <span class="legend-tag a-class"><span class="dot"></span> Aクラス (1〜3位)</span>
+              <span class="legend-tag b-class"><span class="dot"></span> Bクラス (4位以下)</span>
+            </div>
+          </div>
+
+          <div class="table-responsive card">
+            <table class="standings-table" id="standingsTable">
+              <thead>
+                <tr>
+                  <th class="col-rank">順位</th>
+                  <th class="col-team">チーム名</th>
+                  <th class="col-games">試合</th>
+                  <th class="col-win">勝</th>
+                  <th class="col-lose">敗</th>
+                  <th class="col-draw">分</th>
+                  <th class="col-pct">勝率</th>
+                  <th class="col-gb">ゲーム差</th>
+                  <th class="col-runs">得点</th>
+                  <th class="col-ra">失点</th>
+                  <th class="col-diff">得失点差</th>
+                  <th class="col-margin">貯金</th>
+                  <th class="col-rem">残試合</th>
+                  <th class="col-streak">直近</th>
+                  <th class="col-actions">操作</th>
+                </tr>
+              </thead>
+              <tbody id="standingsTableBody">
+                <!-- JSで動的生成 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- セクション 2: 対戦成績マトリクス -->
+        <section class="section-container" id="matrixSection">
+          <div class="section-header">
+            <div class="section-title">
+              <i class="ph-bold ph-grid-four"></i>
+              <h2>対戦成績マトリクス (Head-to-Head)</h2>
+              <span class="help-text">※セルをクリックすると「第1回戦〜第27回戦」の詳細な試合リスト・入力画面が開きます</span>
+            </div>
+            <div class="matrix-legend">
+              <span class="legend-item"><span class="win-box">勝</span> 勝利</span>
+              <span class="legend-item"><span class="lose-box">敗</span> 敗戦</span>
+              <span class="legend-item"><span class="draw-box">分</span> 引分</span>
+              <span class="legend-item"><span class="rem-box">残</span> 残り試合数</span>
+            </div>
+          </div>
+
+          <div class="table-responsive card matrix-wrapper">
+            <table class="matrix-table" id="matrixTable">
+              <thead id="matrixTableHead">
+                <!-- JSで動的生成 -->
+              </thead>
+              <tbody id="matrixTableBody">
+                <!-- JSで動的生成 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 統計・インサイトサマリー -->
+        <section class="section-container" id="summarySection">
+          <div class="section-header">
+            <div class="section-title">
+              <i class="ph-bold ph-chart-polar"></i>
+              <h2>リーグ統計・チームリーダー</h2>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card card">
+              <div class="stat-icon run-icon"><i class="ph-fill ph-fire"></i></div>
+              <div class="stat-info">
+                <span class="stat-label">最多得点チーム</span>
+                <h3 class="stat-value" id="topRunsTeam">-</h3>
+                <span class="stat-sub" id="topRunsVal">- 得点</span>
+              </div>
+            </div>
+            <div class="stat-card card">
+              <div class="stat-icon defense-icon"><i class="ph-fill ph-shield-check"></i></div>
+              <div class="stat-info">
+                <span class="stat-label">最少失点チーム (堅守)</span>
+                <h3 class="stat-value" id="topDefenseTeam">-</h3>
+                <span class="stat-sub" id="topDefenseVal">- 失点</span>
+              </div>
+            </div>
+            <div class="stat-card card">
+              <div class="stat-icon diff-icon"><i class="ph-fill ph-trend-up"></i></div>
+              <div class="stat-info">
+                <span class="stat-label">得失点差トップ</span>
+                <h3 class="stat-value" id="topDiffTeam">-</h3>
+                <span class="stat-sub" id="topDiffVal">-</span>
+              </div>
+            </div>
+            <div class="stat-card card">
+              <div class="stat-icon progress-icon"><i class="ph-fill ph-check-circle"></i></div>
+              <div class="stat-info">
+                <span class="stat-label">リーグ総消化試合</span>
+                <h3 class="stat-value" id="totalGamesPlayed">0 / 0</h3>
+                <span class="stat-sub" id="leagueProgressPct">進捗率: 0.0%</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- タブ 2: 1試合ごとの対戦結果・スコアブック一覧                            -->
+      <!-- ========================================================================= -->
+      <div class="tab-pane" id="paneGames">
+        <section class="section-container">
+          <div class="section-header">
+            <div class="section-title">
+              <i class="ph-bold ph-baseball"></i>
+              <h2>1試合ごとの試合結果・詳細記録 (Scorebook)</h2>
+              <span class="help-text">得点、先発投手、勝敗投手、セーブ、本塁打選手を1試合ずつ詳細に管理できます</span>
+            </div>
+            <div class="section-actions">
+              <div class="preset-dropdown">
+                <button class="btn btn-accent dropdown-toggle" id="autoGenerateBtn" onclick="app.toggleAutoGenerateMenu(event)">
+                  <i class="ph-bold ph-magic-wand"></i>
+                  <span>全試合を一括自動作成</span>
+                  <i class="ph ph-caret-down"></i>
+                </button>
+                <div class="dropdown-menu" id="autoGenerateMenu">
+                  <div class="dropdown-header">自動作成モードを選択</div>
+                  <button class="dropdown-item" onclick="app.generateAllSchedule(false)">
+                    <i class="ph ph-calendar-plus"></i> 未消化の日程枠を作成 (全27回戦)
+                  </button>
+                  <button class="dropdown-item" onclick="app.generateAllSchedule(true)">
+                    <i class="ph ph-play-circle"></i> リアルなスコア付きで全試合をシミュレート
+                  </button>
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="app.openSingleGameModal()">
+                <i class="ph ph-plus-circle"></i>
+                <span>新規試合結果を記録</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- フィルター・コントロールバー -->
+          <div class="filter-card card">
+            <div class="filter-group">
+              <label for="filterTeamSelect"><i class="ph ph-shield"></i> チーム絞り込み:</label>
+              <select id="filterTeamSelect" class="form-control" onchange="app.renderGamesList()">
+                <option value="all">全チーム表示</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="filterVsSelect"><i class="ph ph-sword"></i> 対戦カード:</label>
+              <select id="filterVsSelect" class="form-control" onchange="app.renderGamesList()">
+                <option value="all">すべての対戦カード</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="sortOrderSelect"><i class="ph ph-sort-ascending"></i> 並び替え:</label>
+              <select id="sortOrderSelect" class="form-control" onchange="app.renderGamesList()">
+                <option value="newest">新しい試合順</option>
+                <option value="oldest">古い試合順</option>
+                <option value="round">回戦順 (第1戦〜)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 試合カード一覧グリッド -->
+          <div class="games-grid" id="gamesGridContainer">
+            <!-- JSで動的生成 -->
+          </div>
+        </section>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- タブ 3: 選手名鑑 & 個人成績 (打者・投手・リーダー)                       -->
+      <!-- ========================================================================= -->
+      <div class="tab-pane" id="panePlayers">
+        <section class="section-container">
+          <div class="section-header">
+            <div class="section-title">
+              <i class="ph-bold ph-users-three"></i>
+              <h2>選手名鑑 & 個人成績 (Players & Stats)</h2>
+              <span class="help-text">※NPB公式規定準拠（打率・出塁率・長打率・OPS・防御率・WHIP・K/9等を自動計算）</span>
+            </div>
+            <div class="section-actions">
+              <!-- まとめて削除ドロップダウン -->
+              <div class="preset-dropdown">
+                <button class="btn btn-secondary dropdown-toggle" id="batchDeleteBtn" onclick="app.toggleBatchDeleteMenu(event)">
+                  <i class="ph-bold ph-trash"></i>
+                  <span>まとめて削除</span>
+                  <i class="ph ph-caret-down"></i>
+                </button>
+                <div class="dropdown-menu" id="batchDeleteMenu">
+                  <div class="dropdown-header">削除範囲を選択</div>
+                  <button class="dropdown-item text-danger" onclick="app.deleteBatchPlayers('current')">
+                    <i class="ph ph-user-minus"></i> 表示中チームの選手を全削除
+                  </button>
+                  <button class="dropdown-item text-danger" onclick="app.deleteBatchPlayers('all')">
+                    <i class="ph ph-trash"></i> 全チームの全選手を一括削除
+                  </button>
+                </div>
+              </div>
+
+              <!-- 選択した選手を削除ボタン (選んで削除) -->
+              <button class="btn btn-danger" id="deleteSelectedPlayersBtn" style="display: none;" onclick="app.deleteSelectedPlayers()">
+                <i class="ph-bold ph-trash"></i>
+                <span id="deleteSelectedText">選択した選手を削除 (0名)</span>
+              </button>
+
+              <button class="btn btn-primary" onclick="app.openPlayerModal()">
+                <i class="ph ph-user-plus"></i>
+                <span>新規選手を登録</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 選手フィルター & カテゴリ切り替えバー -->
+          <div class="player-controls card">
+            <div class="player-team-filter">
+              <label for="playerTeamSelect"><i class="ph ph-shield"></i> チーム選択:</label>
+              <select id="playerTeamSelect" class="form-control" onchange="app.handlePlayerTeamChange()">
+                <option value="all">全チーム</option>
+                <!-- JSで動的生成 -->
+              </select>
+            </div>
+
+            <div class="player-subnav">
+              <button class="subtab-btn active" id="subtabBattingBtn" onclick="app.switchPlayerSubtab('batting')">
+                <i class="ph-bold ph-baseball-bat"></i>
+                <span>野手・打撃成績 (Batting)</span>
+              </button>
+              <button class="subtab-btn" id="subtabPitchingBtn" onclick="app.switchPlayerSubtab('pitching')">
+                <i class="ph-bold ph-target"></i>
+                <span>投手成績 (Pitching)</span>
+              </button>
+              <button class="subtab-btn" id="subtabLeadersBtn" onclick="app.switchPlayerSubtab('leaders')">
+                <i class="ph-bold ph-crown"></i>
+                <span>個人タイトル・リーダー (Leaders)</span>
+              </button>
+              <button class="subtab-btn" id="subtabLineupBtn" onclick="app.switchPlayerSubtab('lineup')">
+                <i class="ph-bold ph-list-numbers"></i>
+                <span>打順表 (Lineup)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- サブタブ 1: 野手・打撃成績テーブル -->
+          <div class="player-subpane active" id="subpaneBatting">
+            <div class="table-responsive card">
+              <table class="player-stats-table" id="battingStatsTable">
+                <thead>
+                  <tr>
+                    <th class="col-p-chk">
+                      <input type="checkbox" id="checkAllBatting" title="全選択/解除" onchange="app.toggleSelectAllPlayers('batting', this.checked)">
+                    </th>
+                    <th class="col-p-num">背番号</th>
+                    <th class="col-p-team">チーム</th>
+                    <th class="col-p-name">選手名</th>
+                    <th class="col-p-pos">位置</th>
+                    <th class="col-p-bat">投打</th>
+                    <th class="col-p-highlight">打率</th>
+                    <th>試合</th>
+                    <th>打席</th>
+                    <th>打数</th>
+                    <th>得点</th>
+                    <th>安打</th>
+                    <th>二塁打</th>
+                    <th>三塁打</th>
+                    <th class="col-p-highlight">本塁打</th>
+                    <th class="col-p-highlight">打点</th>
+                    <th>盗塁</th>
+                    <th>盗死</th>
+                    <th>四球</th>
+                    <th>死球</th>
+                    <th>三振</th>
+                    <th>犠打</th>
+                    <th>犠飛</th>
+                    <th>出塁率</th>
+                    <th>長打率</th>
+                    <th class="col-p-highlight">OPS</th>
+                    <th class="col-actions">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="battingStatsTableBody">
+                  <!-- JSで動的生成 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- サブタブ 2: 投手成績テーブル -->
+          <div class="player-subpane" id="subpanePitching">
+            <div class="table-responsive card">
+              <table class="player-stats-table" id="pitchingStatsTable">
+                <thead>
+                  <tr>
+                    <th class="col-p-chk">
+                      <input type="checkbox" id="checkAllPitching" title="全選択/解除" onchange="app.toggleSelectAllPlayers('pitching', this.checked)">
+                    </th>
+                    <th class="col-p-num">背番号</th>
+                    <th class="col-p-team">チーム</th>
+                    <th class="col-p-name">選手名</th>
+                    <th class="col-p-bat">投打</th>
+                    <th class="col-p-highlight">防御率</th>
+                    <th>登板</th>
+                    <th>先発</th>
+                    <th>完投</th>
+                    <th>完封</th>
+                    <th class="col-p-highlight">勝利</th>
+                    <th>敗戦</th>
+                    <th class="col-p-highlight">セーブ</th>
+                    <th>ホールド</th>
+                    <th>勝率</th>
+                    <th>投球回</th>
+                    <th>被安打</th>
+                    <th>被本塁打</th>
+                    <th>与四球</th>
+                    <th>与死球</th>
+                    <th class="col-p-highlight">奪三振</th>
+                    <th>失点</th>
+                    <th>自責点</th>
+                    <th>WHIP</th>
+                    <th>K/9</th>
+                    <th>K/BB</th>
+                    <th class="col-actions">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="pitchingStatsTableBody">
+                  <!-- JSで動的生成 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- サブタブ 3: 個人タイトル・リーダーボード -->
+          <div class="player-subpane" id="subpaneLeaders">
+            <div class="leaders-section-wrapper" id="leadersContainer">
+              <!-- JSで動的生成 -->
+            </div>
+          </div>
+
+          <!-- サブタブ 4: 打順表 (Lineup) -->
+          <div class="player-subpane" id="subpaneLineup">
+            <!-- 打順表コントロールバー -->
+            <div class="lineup-controls card">
+              <div class="lineup-team-filter">
+                <label for="lineupTeamSelect"><i class="ph ph-shield"></i> チーム選択:</label>
+                <select id="lineupTeamSelect" class="form-control" onchange="app.handleLineupTeamChange()">
+                  <!-- JSで動的生成 -->
+                </select>
+              </div>
+              <div class="lineup-dh-toggle">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="dhModeToggle" onchange="app.handleDHModeChange(this.checked)">
+                  <span class="slider"></span>
+                  <span class="toggle-label"><i class="ph ph-baseball"></i> 指名打者 (DH) あり</span>
+                </label>
+              </div>
+              <button class="btn btn-primary" onclick="app.openLineupModal()">
+                <i class="ph ph-pencil-simple"></i>
+                <span>打順を編集</span>
+              </button>
+            </div>
+
+            <!-- 打順表表示エリア -->
+            <div id="lineupDisplayArea">
+              <!-- JSで動的生成 -->
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- フッター -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>© 2026 NPB スタイル 順位表・対戦表 & 選手名鑑システム | 日本プロ野球公式規則準拠</p>
+        <div class="footer-stats-badge" id="footerVisitorCounter">
+          <span class="stats-label"><i class="ph-bold ph-chart-bar"></i> アクセス統計:</span>
+          <span class="stats-metric">本日 <strong id="todayVisitsFooter">--</strong></span>
+          <span class="stats-divider">•</span>
+          <span class="stats-metric">総計 <strong id="totalVisitsFooter">--</strong></span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- モーダル 打順表 編集モーダル                                              -->
+  <!-- ========================================================================= -->
+  <div class="modal-backdrop" id="lineupModal">
+    <div class="modal-dialog card modal-lg">
+      <div class="modal-header">
+        <h3 id="lineupModalTitle"><i class="ph ph-list-numbers"></i> 打順表の編集</h3>
+        <button class="btn-close" onclick="app.closeModal('lineupModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="lineupModalBody">
+        <!-- JSで動的生成 -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="app.closeModal('lineupModal')">キャンセル</button>
+        <button type="button" class="btn btn-primary" onclick="app.handleSaveLineup()"><i class="ph ph-check"></i> 打順を保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- モーダル 1: 選手登録 & 個人成績編集モーダル                               -->
+  <!-- ========================================================================= -->
+  <div class="modal-backdrop" id="playerModal">
+    <div class="modal-dialog card modal-game-detail">
+      <div class="modal-header">
+        <h3 id="playerModalTitle"><i class="ph ph-user-circle"></i> 選手情報 & 成績の入力</h3>
+        <button class="btn-close" onclick="app.closeModal('playerModal')">&times;</button>
+      </div>
+      <form id="playerForm" onsubmit="app.handleSavePlayer(event)">
+        <input type="hidden" id="editPlayerId">
+        <div class="modal-body">
+          <!-- 選手基本情報 -->
+          <div class="player-form-section">
+            <div class="section-subtitle"><i class="ph ph-identification-card"></i> 選手プロフィール</div>
+            <div class="form-row">
+              <div class="form-group col-half">
+                <label for="playerTeamInput">所属チーム <span class="required">*</span></label>
+                <select id="playerTeamInput" class="form-control" required>
+                  <!-- JSで動的生成 -->
+                </select>
+              </div>
+              <div class="form-group" style="width: 110px;">
+                <label for="playerNumberInput">背番号 <span class="required">*</span></label>
+                <input type="number" id="playerNumberInput" class="form-control" min="0" max="999" placeholder="例: 1" required>
+              </div>
+              <div class="form-group col-half">
+                <label for="playerNameInput">選手名 <span class="required">*</span></label>
+                <input type="text" id="playerNameInput" class="form-control" placeholder="例: 岡本 和真" required maxlength="30">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-half">
+                <label for="playerPositionInput">守備位置 (ポジション) <span class="required">*</span></label>
+                <select id="playerPositionInput" class="form-control" required onchange="app.handlePositionChange(this.value)">
+                  <optgroup label="投手">
+                    <option value="投手">投手 (P)</option>
+                  </optgroup>
+                  <optgroup label="捕手">
+                    <option value="捕手">捕手 (C)</option>
+                  </optgroup>
+                  <optgroup label="内野手">
+                    <option value="一塁手" selected>一塁手 (1B)</option>
+                    <option value="二塁手">二塁手 (2B)</option>
+                    <option value="三塁手">三塁手 (3B)</option>
+                    <option value="遊撃手">遊撃手 (SS)</option>
+                  </optgroup>
+                  <optgroup label="外野手">
+                    <option value="右翼手">右翼手 (RF・ライト)</option>
+                    <option value="中堅手">中堅手 (CF・センター)</option>
+                    <option value="左翼手">左翼手 (LF・レフト)</option>
+                  </optgroup>
+                  <optgroup label="その他">
+                    <option value="指名打者">指名打者 (DH)</option>
+                    <option value="外野手">外野手 (OF・複数)</option>
+                    <option value="内野手">内野手 (IF・複数)</option>
+                    <option value="ユーティリティ">ユーティリティ (UT)</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="form-group col-half">
+                <label for="playerThrowsBatsInput">投打</label>
+                <select id="playerThrowsBatsInput" class="form-control">
+                  <option value="右投右打">右投右打</option>
+                  <option value="右投左打">右投左打</option>
+                  <option value="右投両打">右投両打</option>
+                  <option value="左投左打">左投左打</option>
+                  <option value="左投右打">左投右打</option>
+                  <option value="左投両打">左投両打</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 成績入力カテゴリ切り替え -->
+          <div class="form-type-selector">
+            <label class="radio-pill">
+              <input type="radio" name="statTypeRadio" value="batting" id="radioTypeBatting" checked onchange="app.togglePlayerStatForm('batting')">
+              <span><i class="ph ph-baseball-bat"></i> 打撃成績 (野手)</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="statTypeRadio" value="pitching" id="radioTypePitching" onchange="app.togglePlayerStatForm('pitching')">
+              <span><i class="ph ph-target"></i> 投手成績</span>
+            </label>
+          </div>
+
+          <!-- A. 打撃成績入力セクション -->
+          <div class="player-stat-box" id="playerBattingFormBox">
+            <div class="section-subtitle">
+              <i class="ph ph-chart-line-up"></i> 打撃成績の入力 (打率・出塁率・長打率・OPS等は自動計算)
+            </div>
+
+            <div class="form-row four-cols">
+              <div class="form-group">
+                <label for="statG">試合数 (G)</label>
+                <input type="number" id="statG" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="statPA">打席数 (PA)</label>
+                <input type="number" id="statPA" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="statAB">打数 (AB)</label>
+                <input type="number" id="statAB" class="form-control score-number" min="0" value="0" oninput="app.updateLiveBattingCalc()">
+              </div>
+              <div class="form-group">
+                <label for="statR">得点 (R)</label>
+                <input type="number" id="statR" class="form-control score-number" min="0" value="0">
+              </div>
+            </div>
+
+            <div class="form-row four-cols">
+              <div class="form-group">
+                <label for="statH"><span class="highlight-label">安打 (H)</span></label>
+                <input type="number" id="statH" class="form-control score-number" min="0" value="0" oninput="app.updateLiveBattingCalc()">
+              </div>
+              <div class="form-group">
+                <label for="stat2B">二塁打 (2B)</label>
+                <input type="number" id="stat2B" class="form-control score-number" min="0" value="0" oninput="app.updateLiveBattingCalc()">
+              </div>
+              <div class="form-group">
+                <label for="stat3B">三塁打 (3B)</label>
+                <input type="number" id="stat3B" class="form-control score-number" min="0" value="0" oninput="app.updateLiveBattingCalc()">
+              </div>
+              <div class="form-group">
+                <label for="statHR"><span class="highlight-label">本塁打 (HR)</span></label>
+                <input type="number" id="statHR" class="form-control score-number" min="0" value="0" oninput="app.updateLiveBattingCalc()">
+              </div>
+            </div>
+
+            <div class="form-row four-cols">
+              <div class="form-group">
+                <label for="statRBI"><span class="highlight-label">打点 (RBI)</span></label>
+                <input type="number" id="statRBI" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="statSB">盗塁 (SB)</label>
+                <input type="number" id="statSB" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="statCS">盗塁死 (CS)</label>
+                <input type="number" id="statCS" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="statBB">四球 (BB)</label>
+                <input type="number" id="statBB" class="form-control score-number" min="0" value="0" oninput="app.updateLiveBattingCalc()">
+              </div>
+            </div>
+
+            <div class="form-row four-cols">
+              <div class="form-group">
+                <label for="statHBP">死球 (HBP)</label>
+                <input type="number" id="statHBP" class="form-control score-number" min="0" value="0" oninput="app.updateLiveBattingCalc()">
+              </div>
+              <div class="form-group">
+                <label for="statSO">三振 (SO)</label>
+                <input type="number" id="statSO" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="statSH">犠打 (SH)</label>
+                <input type="number" id="statSH" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="statSF">犠飛 (SF)</label>
+                <input type="number" id="statSF" class="form-control score-number" min="0" value="0" oninput="app.updateLiveBattingCalc()">
+              </div>
+            </div>
+
+            <!-- リアルタイム自動計算プレビュー -->
+            <div class="calc-preview-bar">
+              <div class="calc-item">
+                <span class="calc-label">打率 (AVG)</span>
+                <span class="calc-val" id="previewAVG">.000</span>
+              </div>
+              <div class="calc-item">
+                <span class="calc-label">出塁率 (OBP)</span>
+                <span class="calc-val" id="previewOBP">.000</span>
+              </div>
+              <div class="calc-item">
+                <span class="calc-label">長打率 (SLG)</span>
+                <span class="calc-val" id="previewSLG">.000</span>
+              </div>
+              <div class="calc-item highlight">
+                <span class="calc-label">OPS</span>
+                <span class="calc-val" id="previewOPS">.000</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- B. 投手成績入力セクション -->
+          <div class="player-stat-box" id="playerPitchingFormBox" style="display: none;">
+            <div class="section-subtitle">
+              <i class="ph ph-chart-line-up"></i> 投手成績の入力 (防御率・WHIP・K/9・勝率等は自動計算)
+            </div>
+
+            <div class="form-row four-cols">
+              <div class="form-group">
+                <label for="pstatG">登板数 (G)</label>
+                <input type="number" id="pstatG" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="pstatGS">先発数 (GS)</label>
+                <input type="number" id="pstatGS" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="pstatCG">完投 (CG)</label>
+                <input type="number" id="pstatCG" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="pstatSHO">完封 (SHO)</label>
+                <input type="number" id="pstatSHO" class="form-control score-number" min="0" value="0">
+              </div>
+            </div>
+
+            <div class="form-row four-cols">
+              <div class="form-group">
+                <label for="pstatW"><span class="highlight-label">勝利 (W)</span></label>
+                <input type="number" id="pstatW" class="form-control score-number" min="0" value="0" oninput="app.updateLivePitchingCalc()">
+              </div>
+              <div class="form-group">
+                <label for="pstatL"><span class="highlight-label">敗戦 (L)</span></label>
+                <input type="number" id="pstatL" class="form-control score-number" min="0" value="0" oninput="app.updateLivePitchingCalc()">
+              </div>
+              <div class="form-group">
+                <label for="pstatSV"><span class="highlight-label">セーブ (SV)</span></label>
+                <input type="number" id="pstatSV" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="pstatHLD">ホールド (HLD)</label>
+                <input type="number" id="pstatHLD" class="form-control score-number" min="0" value="0">
+              </div>
+            </div>
+
+            <div class="form-row four-cols">
+              <div class="form-group">
+                <label for="pstatIP"><span class="highlight-label">投球回 (IP)</span></label>
+                <input type="number" id="pstatIP" class="form-control score-number" min="0" step="0.1" value="0" placeholder="例: 145.2" oninput="app.updateLivePitchingCalc()">
+              </div>
+              <div class="form-group">
+                <label for="pstatH">被安打 (H)</label>
+                <input type="number" id="pstatH" class="form-control score-number" min="0" value="0" oninput="app.updateLivePitchingCalc()">
+              </div>
+              <div class="form-group">
+                <label for="pstatHR">被本塁打 (HR)</label>
+                <input type="number" id="pstatHR" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="pstatBB">与四球 (BB)</label>
+                <input type="number" id="pstatBB" class="form-control score-number" min="0" value="0" oninput="app.updateLivePitchingCalc()">
+              </div>
+            </div>
+
+            <div class="form-row four-cols">
+              <div class="form-group">
+                <label for="pstatHBP">与死球 (HBP)</label>
+                <input type="number" id="pstatHBP" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="pstatSO"><span class="highlight-label">奪三振 (SO)</span></label>
+                <input type="number" id="pstatSO" class="form-control score-number" min="0" value="0" oninput="app.updateLivePitchingCalc()">
+              </div>
+              <div class="form-group">
+                <label for="pstatR">失点 (R)</label>
+                <input type="number" id="pstatR" class="form-control score-number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="pstatER"><span class="highlight-label">自責点 (ER)</span></label>
+                <input type="number" id="pstatER" class="form-control score-number" min="0" value="0" oninput="app.updateLivePitchingCalc()">
+              </div>
+            </div>
+
+            <!-- リアルタイム自動計算プレビュー -->
+            <div class="calc-preview-bar">
+              <div class="calc-item highlight">
+                <span class="calc-label">防御率 (ERA)</span>
+                <span class="calc-val" id="previewERA">0.00</span>
+              </div>
+              <div class="calc-item">
+                <span class="calc-label">勝率 (WPCT)</span>
+                <span class="calc-val" id="previewWPCT">.000</span>
+              </div>
+              <div class="calc-item">
+                <span class="calc-label">WHIP</span>
+                <span class="calc-val" id="previewWHIP">0.00</span>
+              </div>
+              <div class="calc-item">
+                <span class="calc-label">奪三振率 (K/9)</span>
+                <span class="calc-val" id="previewK9">0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal('playerModal')">キャンセル</button>
+          <button type="submit" class="btn btn-primary"><i class="ph ph-check"></i> 選手情報を保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- モーダル 2: 1試合ごとの詳細入力モーダル -->
+  <div class="modal-backdrop" id="singleGameModal">
+    <div class="modal-dialog card modal-game-detail">
+      <div class="modal-header">
+        <h3 id="singleGameModalTitle"><i class="ph ph-baseball"></i> 試合結果・詳細記録の入力</h3>
+        <button class="btn-close" onclick="app.closeModal('singleGameModal')">&times;</button>
+      </div>
+      <form id="singleGameForm" onsubmit="app.handleSaveSingleGame(event)">
+        <input type="hidden" id="editGameId">
+        <div class="modal-body">
+          <div class="form-row three-cols">
+            <div class="form-group">
+              <label for="gameRoundInput">回戦 (第X戦) <span class="required">*</span></label>
+              <div class="input-with-unit">
+                <input type="number" id="gameRoundInput" class="form-control" min="1" max="27" value="1" required>
+                <span class="unit">回戦</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="gameDateInput">試合日</label>
+              <input type="date" id="gameDateInput" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="gameStadiumInput">開催球場</label>
+              <input type="text" id="gameStadiumInput" class="form-control" placeholder="例: 東京ドーム、甲子園" maxlength="30">
+            </div>
+          </div>
+
+          <div class="game-matchup-box">
+            <div class="matchup-team-col away-team">
+              <div class="matchup-team-label">ビジター (先攻)</div>
+              <div class="form-group">
+                <select id="gameAwayTeamSelect" class="form-control team-select" required onchange="app.handleMatchupTeamsChange()">
+                </select>
+              </div>
+              <div class="form-group score-input-wrapper">
+                <label for="gameAwayScoreInput">得点 (Score)</label>
+                <input type="number" id="gameAwayScoreInput" class="form-control score-huge" min="0" max="99" value="0" required>
+              </div>
+              <div class="form-group">
+                <label for="gameAwayStarterInput"><i class="ph ph-user"></i> 先発投手</label>
+                <input type="text" id="gameAwayStarterInput" class="form-control" placeholder="例: 戸郷" maxlength="20">
+              </div>
+            </div>
+
+            <div class="matchup-divider">
+              <span class="vs-circle">VS</span>
+            </div>
+
+            <div class="matchup-team-col home-team">
+              <div class="matchup-team-label">ホーム (後攻)</div>
+              <div class="form-group">
+                <select id="gameHomeTeamSelect" class="form-control team-select" required onchange="app.handleMatchupTeamsChange()">
+                </select>
+              </div>
+              <div class="form-group score-input-wrapper">
+                <label for="gameHomeScoreInput">得点 (Score)</label>
+                <input type="number" id="gameHomeScoreInput" class="form-control score-huge" min="0" max="99" value="0" required>
+              </div>
+              <div class="form-group">
+                <label for="gameHomeStarterInput"><i class="ph ph-user"></i> 先発投手</label>
+                <input type="text" id="gameHomeStarterInput" class="form-control" placeholder="例: 村上" maxlength="20">
+              </div>
+            </div>
+          </div>
+
+          <div class="pitcher-records-section">
+            <div class="section-subtitle"><i class="ph ph-medal"></i> 投手記録 (勝・敗・S)</div>
+            <div class="form-row three-cols">
+              <div class="form-group win-pitcher-group">
+                <label for="gameWinPitcherInput"><span class="badge-p badge-win">勝</span> 勝利投手 (W)</label>
+                <input type="text" id="gameWinPitcherInput" class="form-control" placeholder="例: 戸郷 (1勝0敗)" maxlength="30">
+              </div>
+              <div class="form-group lose-pitcher-group">
+                <label for="gameLosePitcherInput"><span class="badge-p badge-lose">敗</span> 敗戦投手 (L)</label>
+                <input type="text" id="gameLosePitcherInput" class="form-control" placeholder="例: 村上 (0勝1敗)" maxlength="30">
+              </div>
+              <div class="form-group save-pitcher-group">
+                <label for="gameSavePitcherInput"><span class="badge-p badge-save">Ｓ</span> セーブ (S)</label>
+                <input type="text" id="gameSavePitcherInput" class="form-control" placeholder="例: 大勢 (1S)" maxlength="30">
+              </div>
+            </div>
+          </div>
+
+          <div class="homerun-records-section">
+            <div class="section-subtitle"><i class="ph-fill ph-fire"></i> 本塁打 (ホームラン選手)</div>
+            <div class="form-group">
+              <input type="text" id="gameHomeRunsInput" class="form-control" placeholder="例: 岡本1号(巨)、佐藤輝1号(神)、大山2号(神)" maxlength="100">
+              <small class="form-text">複数いる場合はカンマ等で区切って入力してください。</small>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="gameNotesInput"><i class="ph ph-note"></i> 備考・戦評</label>
+            <input type="text" id="gameNotesInput" class="form-control" placeholder="例: 9回サヨナラ勝ち、延長12回引き分け" maxlength="100">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal('singleGameModal')">キャンセル</button>
+          <button type="submit" class="btn btn-primary"><i class="ph ph-check"></i> 試合結果を保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- モーダル 3: 対戦カード27回戦一覧モーダル -->
+  <div class="modal-backdrop" id="cardGamesModal">
+    <div class="modal-dialog card modal-lg">
+      <div class="modal-header">
+        <h3 id="cardGamesModalTitle"><i class="ph ph-sword"></i> 対戦カード詳細 (全27回戦)</h3>
+        <button class="btn-close" onclick="app.closeModal('cardGamesModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="match-header-display" id="cardGamesHeaderDisplay">
+        </div>
+
+        <div class="card-modal-actions">
+          <button class="btn btn-sm btn-primary" id="cardAddNewGameBtn">
+            <i class="ph ph-plus-circle"></i> このカードの試合を追加
+          </button>
+          <button class="btn btn-sm btn-secondary" id="cardOpenSummaryEditBtn">
+            <i class="ph ph-pencil-simple"></i> 勝敗数を直接編集
+          </button>
+        </div>
+
+        <div class="rounds-list-container">
+          <div class="rounds-list-header">対戦カード 試合一覧</div>
+          <div class="rounds-list-grid" id="cardRoundsListGrid">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="app.closeModal('cardGamesModal')">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル 4: チーム追加・編集モーダル -->
+  <div class="modal-backdrop" id="teamModal">
+    <div class="modal-dialog card">
+      <div class="modal-header">
+        <h3 id="teamModalTitle"><i class="ph ph-shield"></i> チーム情報の編集</h3>
+        <button class="btn-close" onclick="app.closeModal('teamModal')">&times;</button>
+      </div>
+      <form id="teamForm" onsubmit="app.handleSaveTeam(event)">
+        <input type="hidden" id="editTeamId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="teamNameInput">チーム名 (正式名称) <span class="required">*</span></label>
+            <input type="text" id="teamNameInput" class="form-control" placeholder="例: 読売ジャイアンツ" required maxlength="30">
+          </div>
+          <div class="form-group">
+            <label for="teamShortInput">略称 (2〜4文字) <span class="required">*</span></label>
+            <input type="text" id="teamShortInput" class="form-control" placeholder="例: 巨人" required maxlength="10">
+          </div>
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="teamColorInput">チームカラー</label>
+              <div class="color-picker-wrapper">
+                <input type="color" id="teamColorInput" class="color-input" value="#F97711">
+                <input type="text" id="teamColorHex" class="form-control form-control-sm" value="#F97711">
+              </div>
+            </div>
+            <div class="form-group col-half">
+              <label for="teamIconInput">アイコン/イニシャル</label>
+              <input type="text" id="teamIconInput" class="form-control" placeholder="例: G" maxlength="3">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal('teamModal')">キャンセル</button>
+          <button type="submit" class="btn btn-primary"><i class="ph ph-check"></i> 保存する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- モーダル 5: 対戦成績一括サマリー編集モーダル -->
+  <div class="modal-backdrop" id="matchModal">
+    <div class="modal-dialog card modal-match">
+      <div class="modal-header">
+        <h3><i class="ph ph-sword"></i> 対戦勝敗サマリーの編集</h3>
+        <button class="btn-close" onclick="app.closeModal('matchModal')">&times;</button>
+      </div>
+      <form id="matchForm" onsubmit="app.handleSaveMatch(event)">
+        <input type="hidden" id="matchTeamAId">
+        <input type="hidden" id="matchTeamBId">
+        <div class="modal-body">
+          <div class="match-header-display">
+            <div class="match-team-card" id="matchTeamACard">
+              <div class="team-badge-circle" id="matchTeamABadge">A</div>
+              <span class="match-team-name" id="matchTeamAName">チームA</span>
+            </div>
+            <div class="match-vs-badge">VS</div>
+            <div class="match-team-card" id="matchTeamBCard">
+              <div class="team-badge-circle" id="matchTeamBBadge">B</div>
+              <span class="match-team-name" id="matchTeamBName">チームB</span>
+            </div>
+          </div>
+
+          <div class="match-card-limit-info">
+            <span>最大対戦数: <strong id="matchMaxGamesDisplay">27</strong> 回戦</span>
+            <span class="current-total-badge" id="matchCurrentTotalBadge">現在合計: 0 試合 (残 27 試合)</span>
+          </div>
+
+          <div class="score-input-section">
+            <div class="section-subtitle">
+              <strong id="matchTeamAPovLabel">チームA</strong> 視点での成績
+            </div>
+            <div class="score-inputs-grid">
+              <div class="form-group score-item win-group">
+                <label for="matchWinsInput"><i class="ph ph-trophy"></i> 勝ち (W)</label>
+                <input type="number" id="matchWinsInput" class="form-control score-number" min="0" max="27" value="0" required onchange="app.validateMatchTotals()">
+              </div>
+              <div class="form-group score-item lose-group">
+                <label for="matchLossesInput"><i class="ph ph-x-circle"></i> 負け (L)</label>
+                <input type="number" id="matchLossesInput" class="form-control score-number" min="0" max="27" value="0" required onchange="app.validateMatchTotals()">
+              </div>
+              <div class="form-group score-item draw-group">
+                <label for="matchDrawsInput"><i class="ph ph-minus-circle"></i> 分け (D)</label>
+                <input type="number" id="matchDrawsInput" class="form-control score-number" min="0" max="27" value="0" required onchange="app.validateMatchTotals()">
+              </div>
+            </div>
+
+            <div class="score-inputs-grid score-runs-grid">
+              <div class="form-group score-item run-group">
+                <label for="matchRunsInput"><i class="ph ph-fire"></i> 総得点 (A得点)</label>
+                <input type="number" id="matchRunsInput" class="form-control score-number" min="0" max="999" value="0" required>
+              </div>
+              <div class="form-group score-item ra-group">
+                <label for="matchRunsAgainstInput"><i class="ph ph-shield"></i> 総失点 (B得点)</label>
+                <input type="number" id="matchRunsAgainstInput" class="form-control score-number" min="0" max="999" value="0" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="quick-action-bar">
+            <span class="quick-label">ワンクリック入力:</span>
+            <button type="button" class="btn btn-sm btn-win" onclick="app.quickAddMatch('win')">+1 勝</button>
+            <button type="button" class="btn btn-sm btn-lose" onclick="app.quickAddMatch('lose')">+1 敗</button>
+            <button type="button" class="btn btn-sm btn-draw" onclick="app.quickAddMatch('draw')">+1 分</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="app.quickResetMatch()">クリア</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal('matchModal')">キャンセル</button>
+          <button type="submit" class="btn btn-primary" id="saveMatchBtn"><i class="ph ph-check"></i> 反映する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- モーダル 6: チーム単体成績手動編集モーダル -->
+  <div class="modal-backdrop" id="teamStatsModal">
+    <div class="modal-dialog card">
+      <div class="modal-header">
+        <h3><i class="ph ph-pencil-simple-line"></i> チーム成績の手動編集</h3>
+        <button class="btn-close" onclick="app.closeModal('teamStatsModal')">&times;</button>
+      </div>
+      <form id="teamStatsForm" onsubmit="app.handleSaveTeamStats(event)">
+        <input type="hidden" id="statsTeamId">
+        <div class="modal-body">
+          <div class="editing-team-title">
+            <span class="team-badge" id="statsTeamBadge"></span>
+            <h4 id="statsTeamName">チーム名</h4>
+          </div>
+          <div class="alert alert-info">
+            <i class="ph ph-info"></i>
+            <span>勝・敗・分・得点・失点を直接変更できます。勝率や得失点差、ゲーム差は自動計算されます。</span>
+          </div>
+
+          <div class="form-row three-cols">
+            <div class="form-group">
+              <label for="statsWins">勝ち (勝)</label>
+              <input type="number" id="statsWins" class="form-control score-number" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="statsLosses">負け (敗)</label>
+              <input type="number" id="statsLosses" class="form-control score-number" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="statsDraws">引き分け (分)</label>
+              <input type="number" id="statsDraws" class="form-control score-number" min="0" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="statsRuns">総得点</label>
+              <input type="number" id="statsRuns" class="form-control score-number" min="0" required>
+            </div>
+            <div class="form-group col-half">
+              <label for="statsRA">総失点</label>
+              <input type="number" id="statsRA" class="form-control score-number" min="0" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal('teamStatsModal')">キャンセル</button>
+          <button type="submit" class="btn btn-primary"><i class="ph ph-check"></i> 更新する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- モーダル 7: 設定モーダル -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal-dialog card">
+      <div class="modal-header">
+        <h3><i class="ph ph-gear"></i> リーグ・ルール設定</h3>
+        <button class="btn-close" onclick="app.closeModal('settingsModal')">&times;</button>
+      </div>
+      <form id="settingsForm" onsubmit="app.handleSaveSettings(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="leagueNameInput">リーグ・大会名</label>
+            <input type="text" id="leagueNameInput" class="form-control" value="ペナントレース 順位表">
+          </div>
+
+          <div class="form-group">
+            <label for="gamesPerMatchInput">1カードあたりの対戦回数 (デフォルト: 27回戦)</label>
+            <div class="input-with-unit">
+              <input type="number" id="gamesPerMatchInput" class="form-control" min="1" max="100" value="27" required>
+              <span class="unit">回戦</span>
+            </div>
+            <small class="form-text">NPB公式は各同リーグ内25〜27回戦程度です。</small>
+          </div>
+
+          <div class="form-group">
+            <label for="tiebreakerSelect">同率時の順位決定方式 (タイブレーク)</label>
+            <select id="tiebreakerSelect" class="form-control">
+              <option value="central">セ・リーグ方式 (勝率 ➔ 勝利数 ➔ 直接対決 ➔ 得失点差 ➔ 総得点)</option>
+              <option value="pacific">パ・リーグ方式 (勝率 ➔ 直接対決 ➔ 得失点差 ➔ 総得点 ➔ 勝利数)</option>
+              <option value="simple">シンプル方式 (勝率 ➔ 得失点差 ➔ 総得点)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal('settingsModal')">キャンセル</button>
+          <button type="submit" class="btn btn-primary"><i class="ph ph-check"></i> 設定を保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- モーダル 8: データ管理 -->
+  <div class="modal-backdrop" id="dataModal">
+    <div class="modal-dialog card modal-lg">
+      <div class="modal-header">
+        <h3><i class="ph ph-database"></i> データ管理 & バックアップ</h3>
+        <button class="btn-close" onclick="app.closeModal('dataModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="data-actions-row">
+          <button class="btn btn-primary" onclick="app.exportJSON()">
+            <i class="ph ph-download-simple"></i> JSONで書き出し
+          </button>
+          <button class="btn btn-secondary" onclick="app.exportCSV()">
+            <i class="ph ph-file-csv"></i> 順位表CSV出力
+          </button>
+          <label class="btn btn-outline file-upload-btn">
+            <i class="ph ph-upload-simple"></i> JSONから読み込み
+            <input type="file" id="jsonFileInput" accept=".json" onchange="app.importJSON(event)" style="display:none;">
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="jsonTextarea">JSONデータ (直接コピー/ペーストも可能)</label>
+          <textarea id="jsonTextarea" class="form-control code-editor" rows="8" placeholder="ここにJSONデータを貼り付けて復元できます"></textarea>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="app.loadFromTextarea()">
+          <i class="ph ph-arrow-clockwise"></i> 上記JSONから復元
+        </button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="app.closeModal('dataModal')">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- アプリスクリプト -->
+  <script src="app.js"></script>
+</body>
+</html>
