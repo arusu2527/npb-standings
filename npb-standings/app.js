@@ -647,9 +647,10 @@ class NPBStandingsApp {
   getMatchRecord(id1, id2) {
     const key = this.getMatchKey(id1, id2);
     
-    const cardGames = this.games.filter(g => 
-      (g.awayTeamId === id1 && g.homeTeamId === id2) ||
-      (g.awayTeamId === id2 && g.homeTeamId === id1)
+    const cardGames = this.games.filter(g =>
+      ((g.awayTeamId === id1 && g.homeTeamId === id2) ||
+       (g.awayTeamId === id2 && g.homeTeamId === id1)) &&
+      g.isResultEntered === true  // 結果が入力済みの試合のみ集計
     );
 
     if (cardGames.length > 0) {
@@ -2102,7 +2103,8 @@ class NPBStandingsApp {
       losePitcher,
       savePitcher,
       homeRuns,
-      notes
+      notes,
+      isResultEntered: true  // 試合結果入力済みフラグ（順位表集計に使用）
     };
 
     if (id) {
