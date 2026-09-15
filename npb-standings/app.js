@@ -74,11 +74,15 @@ class NPBStandingsApp {
       });
     }
 
-    // 全試合自動作成メニューのトグル
+    // 全試合自動作成メニュー・まとめて削除メニューのトグル
     document.addEventListener('click', (e) => {
       const autoMenu = document.getElementById('autoGenerateMenu');
       if (autoMenu && !e.target.closest('#autoGenerateBtn')) {
         autoMenu.classList.remove('show');
+      }
+      const batchMenu = document.getElementById('batchDeleteMenu');
+      if (batchMenu && !e.target.closest('#batchDeleteBtn')) {
+        batchMenu.classList.remove('show');
       }
     });
   }
@@ -86,6 +90,12 @@ class NPBStandingsApp {
   toggleAutoGenerateMenu(event) {
     if (event) event.stopPropagation();
     const menu = document.getElementById('autoGenerateMenu');
+    if (menu) menu.classList.toggle('show');
+  }
+
+  toggleBatchDeleteMenu(event) {
+    if (event) event.stopPropagation();
+    const menu = document.getElementById('batchDeleteMenu');
     if (menu) menu.classList.toggle('show');
   }
 
@@ -1338,14 +1348,19 @@ class NPBStandingsApp {
     calculatedList.forEach(p => {
       const team = this.teams.find(t => t.id === p.teamId) || { shortName: '-', color: '#64748b' };
       const s = p.stats;
+      const isSelected = this.selectedPlayerIds.has(p.id);
 
       let posBadgeClass = 'pos-if';
-      if (p.position === '捕手') posBadgeClass = 'pos-c';
-      else if (p.position === '外野手') posBadgeClass = 'pos-of';
+      if (p.position === '投手') posBadgeClass = 'pos-p';
+      else if (p.position === '捕手') posBadgeClass = 'pos-c';
+      else if (['外野手', '右翼手', '中堅手', '左翼手'].includes(p.position)) posBadgeClass = 'pos-of';
       else if (p.position === '指名打者') posBadgeClass = 'pos-dh';
 
       html += `
-        <tr>
+        <tr class="${isSelected ? 'selected-row' : ''}">
+          <td class="col-p-chk">
+            <input type="checkbox" class="player-checkbox" value="${p.id}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPlayer('${p.id}', this.checked)">
+          </td>
           <td class="col-p-num">#${p.number || '-'}</td>
           <td class="col-p-team">
             <span style="color: ${team.color || '#3b82f6'}; font-weight:700;">${this.escapeHTML(team.shortName)}</span>
@@ -1388,6 +1403,8 @@ class NPBStandingsApp {
     });
 
     tbody.innerHTML = html;
+    this.updateCheckAllState();
+    this.updateDeleteSelectedBtn();
   }
 
   renderPitchingTable() {
@@ -1420,9 +1437,13 @@ class NPBStandingsApp {
     calculatedList.forEach(p => {
       const team = this.teams.find(t => t.id === p.teamId) || { shortName: '-', color: '#64748b' };
       const s = p.stats;
+      const isSelected = this.selectedPlayerIds.has(p.id);
 
       html += `
-        <tr>
+        <tr class="${isSelected ? 'selected-row' : ''}">
+          <td class="col-p-chk">
+            <input type="checkbox" class="player-checkbox" value="${p.id}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPlayer('${p.id}', this.checked)">
+          </td>
           <td class="col-p-num">#${p.number || '-'}</td>
           <td class="col-p-team">
             <span style="color: ${team.color || '#3b82f6'}; font-weight:700;">${this.escapeHTML(team.shortName)}</span>
@@ -1465,6 +1486,8 @@ class NPBStandingsApp {
     });
 
     tbody.innerHTML = html;
+    this.updateCheckAllState();
+    this.updateDeleteSelectedBtn();
   }
 
   renderLeadersBoard() {
@@ -1803,7 +1826,143 @@ class NPBStandingsApp {
   deletePlayer(playerId) {
     if (!confirm('この選手情報を削除しますか？')) return;
     this.players = this.players.filter(x => x.id !== playerId);
+    this.selectedPlayerIds.delete(playerId);
     this.saveToStorage();
+    this.updateDeleteSelectedBtn();
+    this.render();
+  }
+
+  // ==========================================
+  // 選手の一括削除 & 選択削除 (まとめて削除)
+  // ==========================================
+  // 個別チェックボックスのトグル
+  toggleSelectPlayer(playerId, isChecked) {
+    if (isChecked) {
+      this.selectedPlayerIds.add(playerId);
+    } else {
+      this.selectedPlayerIds.delete(playerId);
+    }
+    this.updateDeleteSelectedBtn();
+    this.updateCheckAllState();
+  }
+
+  // 全選択 / 全解除
+  toggleSelectAllPlayers(tableType, isChecked) {
+    let currentList = [];
+    if (tableType === 'batting') {
+      currentList = this.players.filter(p => p.type === 'batting' || (p.position && p.position !== '投手'));
+    } else if (tableType === 'pitching') {
+      currentList = this.players.filter(p => p.type === 'pitching' || p.position === '投手');
+    }
+    if (this.selectedPlayerTeam !== 'all') {
+      currentList = currentList.filter(p => p.teamId === this.selectedPlayerTeam);
+    }
+
+    currentList.forEach(p => {
+      if (isChecked) {
+        this.selectedPlayerIds.add(p.id);
+      } else {
+        this.selectedPlayerIds.delete(p.id);
+      }
+    });
+
+    this.updateDeleteSelectedBtn();
+    if (tableType === 'batting') this.renderBattingTable();
+    else if (tableType === 'pitching') this.renderPitchingTable();
+  }
+
+  // 全選択チェックボックスの同期
+  updateCheckAllState() {
+    const chkBatting = document.getElementById('checkAllBatting');
+    const chkPitching = document.getElementById('checkAllPitching');
+
+    let battingList = this.players.filter(p => p.type === 'batting' || (p.position && p.position !== '投手'));
+    let pitchingList = this.players.filter(p => p.type === 'pitching' || p.position === '投手');
+    if (this.selectedPlayerTeam !== 'all') {
+      battingList = battingList.filter(p => p.teamId === this.selectedPlayerTeam);
+      pitchingList = pitchingList.filter(p => p.teamId === this.selectedPlayerTeam);
+    }
+
+    if (chkBatting) {
+      chkBatting.checked = battingList.length > 0 && battingList.every(p => this.selectedPlayerIds.has(p.id));
+    }
+    if (chkPitching) {
+      chkPitching.checked = pitchingList.length > 0 && pitchingList.every(p => this.selectedPlayerIds.has(p.id));
+    }
+  }
+
+  // 「選択した選手を削除 (X名)」ボタンの表示更新
+  updateDeleteSelectedBtn() {
+    const btn = document.getElementById('deleteSelectedPlayersBtn');
+    const textEl = document.getElementById('deleteSelectedText');
+    const count = this.selectedPlayerIds.size;
+
+    if (btn) {
+      if (count > 0) {
+        btn.style.display = 'inline-flex';
+        if (textEl) textEl.textContent = `選択した選手を削除 (${count}名)`;
+      } else {
+        btn.style.display = 'none';
+      }
+    }
+  }
+
+  // 選択した選手を一括削除（選んで削除）
+  deleteSelectedPlayers() {
+    const count = this.selectedPlayerIds.size;
+    if (count === 0) return;
+
+    if (!confirm(`選択された ${count} 名の選手データを削除しますか？\nこの操作は元に戻せません。`)) {
+      return;
+    }
+
+    this.players = this.players.filter(p => !this.selectedPlayerIds.has(p.id));
+    this.selectedPlayerIds.clear();
+    this.saveToStorage();
+    this.updateDeleteSelectedBtn();
+    this.render();
+  }
+
+  // まとめて削除（現在表示チーム / 全チーム）
+  deleteBatchPlayers(scope) {
+    const menu = document.getElementById('batchDeleteMenu');
+    if (menu) menu.classList.remove('show');
+
+    if (scope === 'current') {
+      if (this.selectedPlayerTeam === 'all') {
+        if (!confirm(`現在「全チーム」が選択されています。\n全チームの登録選手（合計 ${this.players.length} 名）を一括削除しますか？`)) {
+          return;
+        }
+        this.players = [];
+        this.selectedPlayerIds.clear();
+      } else {
+        const team = this.teams.find(t => t.id === this.selectedPlayerTeam);
+        const teamName = team ? team.name : '選択チーム';
+        const targets = this.players.filter(p => p.teamId === this.selectedPlayerTeam);
+        if (targets.length === 0) {
+          alert(`「${teamName}」に登録されている選手はいません。`);
+          return;
+        }
+        if (!confirm(`「${teamName}」の全選手（${targets.length}名）を一括削除しますか？`)) {
+          return;
+        }
+        this.players = this.players.filter(p => p.teamId !== this.selectedPlayerTeam);
+        targets.forEach(p => this.selectedPlayerIds.delete(p.id));
+      }
+    } else if (scope === 'all') {
+      if (this.players.length === 0) {
+        alert('登録されている選手はいません。');
+        return;
+      }
+      if (!confirm(`全チームの全選手（合計 ${this.players.length} 名）を一括削除しますか？\n※この操作は取り消せません。`)) {
+        return;
+      }
+      this.players = [];
+      this.selectedPlayerIds.clear();
+    }
+
+    this.saveToStorage();
+    this.updateDeleteSelectedBtn();
     this.render();
   }
 
