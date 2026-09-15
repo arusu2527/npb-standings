@@ -41,7 +41,7 @@
 4. 設定画面で以下を確認・入力します：
    - **Name**: `npb-standings` （お好みの名前）
    - **Environment**: `Python`
-   - **Build Command**: （空欄のままでOK）
+   - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `python server.py`
    - **Instance Type**: `Free` (無料プラン)
 5. 最下部の **「Create Web Service」** をクリックします。

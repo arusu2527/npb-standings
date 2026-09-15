@@ -100,6 +100,12 @@
           <span>データ管理</span>
         </button>
 
+        <!-- 使い方ガイド -->
+        <button class="btn btn-secondary" id="guideBtn" onclick="app.openModal('guideModal')" title="使い方ガイド">
+          <i class="ph-bold ph-book-open"></i>
+          <span>使い方</span>
+        </button>
+
         <!-- テーマ切り替え -->
         <button class="btn btn-icon" id="themeToggleBtn" onclick="app.toggleTheme()" title="テーマ切替">
           <i class="ph ph-sun" id="themeIcon"></i>
@@ -1257,6 +1263,104 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="app.closeModal('dataModal')">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル 9: 使い方ガイド -->
+  <div class="modal-backdrop" id="guideModal">
+    <div class="modal-dialog card modal-lg guide-modal-dialog">
+      <div class="modal-header">
+        <h3><i class="ph-bold ph-book-open"></i> システム簡単使い方ガイド</h3>
+        <button class="btn-close" onclick="app.closeModal('guideModal')">&times;</button>
+      </div>
+      <div class="modal-body guide-modal-body">
+        <!-- はじめに / クイックスタート -->
+        <div class="guide-welcome-box">
+          <div class="guide-welcome-icon"><i class="ph-bold ph-baseball"></i></div>
+          <div class="guide-welcome-text">
+            <h4>プロ野球 順位表・対戦表 & 選手名鑑システムへようこそ！</h4>
+            <p>日本プロ野球（NPB）公式ルール（勝率計算・同率タイブレーク・個人タイトル等）に完全準拠した本格マネジメントツールです。以下の手順で誰でもすぐにお使いいただけます。</p>
+          </div>
+        </div>
+
+        <div class="guide-grid">
+          <!-- ステップ 1 -->
+          <div class="guide-step-card">
+            <div class="guide-step-header">
+              <span class="guide-step-num">Step 1</span>
+              <h5>チームとリーグの準備</h5>
+            </div>
+            <div class="guide-step-content">
+              <ul>
+                <li><strong>プリセットから読み込む（推奨）</strong>: ヘッダーの「プリセット」から<strong>「セントラル・リーグ」「パシフィック・リーグ」「12球団全体」</strong>を選ぶだけで、公式球団名・カラー・主要選手が即座にセットされます。</li>
+                <li><strong>チーム追加</strong>: 「チーム追加」ボタンから、自作のオリジナルチームや球団を何チームでも自由に追加・編集できます。</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ステップ 2 -->
+          <div class="guide-step-card">
+            <div class="guide-step-header">
+              <span class="guide-step-num">Step 2</span>
+              <h5>順位表 & 対戦マトリクス</h5>
+            </div>
+            <div class="guide-step-content">
+              <ul>
+                <li><strong>自動集計 & NPB公式順位ソート</strong>: 勝率、ゲーム差、得失点差などが自動計算され、NPB公式の同率時順位決定規則（セ・パ両方式対応）で1位〜最下位まで自動整列します。</li>
+                <li><strong>マトリクスの直接入力</strong>: 対戦表の各マス（セル）をクリックすると、カードごとの「勝・敗・分・得点・失点」を直接入力して更新できます（1カードあたり最大27回戦対応）。</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ステップ 3 -->
+          <div class="guide-step-card">
+            <div class="guide-step-header">
+              <span class="guide-step-num">Step 3</span>
+              <h5>1試合ごとの詳細スコアブック</h5>
+            </div>
+            <div class="guide-step-content">
+              <ul>
+                <li><strong>1試合ずつ記録</strong>: 「試合結果を入力」ボタンから、各試合のスコア、先発投手、勝利/敗戦/セーブ投手、ホームラン打者を詳細に記録できます。</li>
+                <li><strong>全試合を一括自動作成</strong>: 「1試合ごとの対戦結果」タブにある「全試合を一括自動作成」ボタンを押すと、登録されたチーム同士の全対戦カードの試合日程・枠組みをワンクリックで一括生成できます。</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ステップ 4 -->
+          <div class="guide-step-card">
+            <div class="guide-step-header">
+              <span class="guide-step-num">Step 4</span>
+              <h5>選手名鑑 & 個人成績・打順表</h5>
+            </div>
+            <div class="guide-step-content">
+              <ul>
+                <li><strong>個人成績の自動計算</strong>: 打数・安打・本塁打・投球回・自責点等を入力すると、打率・出塁率・長打率・OPS・防御率・WHIP・K/9などがリアルタイムに自動計算されます。</li>
+                <li><strong>リーダーボード</strong>: 首位打者、本塁打王、打点王、最優秀防御率、最多勝、セーブ王などのランキングが自動表示されます。</li>
+                <li><strong>打順表（スタメン登録）</strong>: 「打順表」サブタブから、指名打者（DH）あり・なしの2パターンで各球団のスタメンオーダーを登録・管理できます。</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ステップ 5 -->
+          <div class="guide-step-card">
+            <div class="guide-step-header">
+              <span class="guide-step-num">Step 5</span>
+              <h5>データ保存 & Web公開</h5>
+            </div>
+            <div class="guide-step-content">
+              <ul>
+                <li><strong>自動保存 & バックアップ</strong>: 入力内容はブラウザに自動保存されます。「データ管理」からJSONファイルとしてPCに書き出し・復元が可能です。</li>
+                <li><strong>スマホや友人へ公開</strong>: フォルダ内の <code>start_public_server.bat</code> をダブルクリックするだけで、世界中からアクセス可能な専用URLを発行して共有できます（アクセスカウンター付き）。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="app.closeModal('guideModal')">
+          <i class="ph ph-check"></i> 理解しました（閉じる）
+        </button>
       </div>
     </div>
   </div>
